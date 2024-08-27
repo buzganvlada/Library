@@ -1,11 +1,8 @@
 ﻿using LibraryDataAccess.Data;
 using LibraryDataAccess.Models;
+using Libray.Core;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace LibraryDataAccess.Repositories
 {
@@ -17,51 +14,54 @@ namespace LibraryDataAccess.Repositories
         {
             _context = context;
         }
-
         public async Task<Book> CreateBookAsync(Book book)
         {
-            var bookAdded = await _context.Books.AddAsync(book);
+            var bookCreated = await _context.Books.AddAsync(book);
             await _context.SaveChangesAsync();
-            return bookAdded.Entity;
+            return bookCreated.Entity;
         }
 
         public async Task DeleteBookAsync(int id)
         {
-            var bookToDelete = await _context.Books.FirstOrDefaultAsync(b => b.BookId == id);
+            var bookToDelete = await _context.Books.FirstOrDefaultAsync(c => c.BookId == id);
             if (bookToDelete == null)
             {
-                throw new KeyNotFoundException("Book not found.");
+                throw new KeyNotFoundException();
             }
 
-            _context.Books.Remove(bookToDelete);
+            _context.Remove(bookToDelete);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Book>> GetBooksAsync()
-        {
-            return await _context.Books.ToListAsync();
-        }
-
-        public async Task<Book> GetBookByIdAsync(int id)
+        public async Task<Book?> GetBookByIdAsync(int id)
         {
             return await _context.Books.FirstOrDefaultAsync(b => b.BookId == id);
         }
 
+        public async Task<PaginatedList<Book>> GetBooksAsync(int page, int nr)
+        {
+            var count = _context.Books.Count();
+            var totalPages = (int)Math.Ceiling(count / (double)nr);
+            var books = await _context.Books.Skip((page - 1) * nr).Take(nr).ToListAsync();
+
+            return new PaginatedList<Book>(books, page, totalPages);
+        }
+
         public async Task<Book> UpdateBookAsync(Book book)
         {
-            var bookToUpdate = await _context.Books.FirstOrDefaultAsync(b => b.BookId == book.BookId);
+            var bookToUpdate = await _context.Books.FirstOrDefaultAsync(c => c.BookId == book.BookId);
             if (bookToUpdate == null)
             {
-                throw new KeyNotFoundException("Book not found.");
+                throw new KeyNotFoundException();
             }
 
+            bookToUpdate.AuthorId = book.AuthorId;
+            bookToUpdate.CategoryId = book.CategoryId;
             bookToUpdate.Title = book.Title;
             bookToUpdate.Price = book.Price;
-            bookToUpdate.CategoryId = book.CategoryId;
-            bookToUpdate.AuthorId = book.AuthorId;
-
+            var updatedBook = _context.Update(bookToUpdate);
             await _context.SaveChangesAsync();
-            return bookToUpdate;
+            return updatedBook.Entity;
         }
     }
 }

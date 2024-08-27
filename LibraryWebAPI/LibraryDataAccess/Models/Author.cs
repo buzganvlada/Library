@@ -7,6 +7,6 @@ namespace LibraryDataAccess.Models
 
         public string AuthorName { get; set; }
 
-        public ICollection<Book> Books { get; set; }
+        public ICollection<Book>? Books { get; set; }
     }
 }

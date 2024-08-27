@@ -1,5 +1,6 @@
-
+using FluentValidation;
 using LibraryDataAccess.Data;
+using LibraryDataAccess.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibraryWebAPI
@@ -9,15 +10,26 @@ namespace LibraryWebAPI
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var configuration = builder.Configuration;
 
             // Add services to the container.
+            builder.Services.AddDbContext<LibraryContext>(options =>
+            {
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+            });
+            builder.Services.AddScoped<IBookRepository, BookRepository>();
+            builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+            builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+
+            builder.Services.AddAutoMapper(typeof(Program).Assembly);
+
+            builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddDbContext<LibraryContext>(options =>
-        options.UseSqlite("Data Source=library.db"));
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

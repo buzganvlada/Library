@@ -1,7 +1,6 @@
-﻿
-namespace LibraryDataAccess.Models
+﻿namespace LibraryWebAPI.Dto.Book
 {
-    public class Book
+    public class BookDto
     {
         public int BookId { get; set; }
 
@@ -11,10 +10,6 @@ namespace LibraryDataAccess.Models
 
         public int CategoryId { get; set; }
 
-        public Category? Category { get; set; }
-
         public int AuthorId { get; set; }
-
-        public Author? Author { get; set; }
     }
 }

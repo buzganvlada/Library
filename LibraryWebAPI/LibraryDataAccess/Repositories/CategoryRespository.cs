@@ -1,6 +1,9 @@
 ﻿using LibraryDataAccess.Data;
 using LibraryDataAccess.Models;
+using Libray.Core;
 using Microsoft.EntityFrameworkCore;
+using SQLitePCL;
+using System.Runtime.CompilerServices;
 
 namespace LibraryDataAccess.Repositories
 {
@@ -31,10 +34,13 @@ namespace LibraryDataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Category>> GetCategoriesAsync()
+        public async Task<PaginatedList<Category>> GetCategoriesAsync(int page, int nr)
         {
-            var categories = await _context.Categories.ToListAsync();
-            return categories;
+            var count = _context.Categories.Count();
+            var totalPages = (int)Math.Ceiling(count / (double)nr);
+            var categories = await _context.Categories.Skip((page - 1) * nr).Take(nr).ToListAsync();
+
+            return new PaginatedList<Category>(categories, page, totalPages);
         }
 
         public async Task<Category?> GetCategoryByIdAsync(int id)
